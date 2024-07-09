@@ -1,5 +1,2 @@
-apiKeyForGetClipboard = "VERY_SECRET_KEY_FOR_CLIENT"
-apiKeyForSetClipboard = "VERY_SECRET_KEY_FOR_SERVER"
-httpsCertificateFilePath = "cert.pem"
-httpsCertificateSecretFilePath = "key.pem"
+encryptionKey = "VERY_SECRET_KEY_FOR_SERVER"
 port = 8090

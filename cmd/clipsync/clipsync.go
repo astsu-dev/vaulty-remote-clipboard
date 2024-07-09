@@ -13,14 +13,12 @@ import (
 
 	"clipsync/internal/controllers"
 	"clipsync/internal/services"
+	"clipsync/internal/utils"
 )
 
 type Config struct {
-	ApiKeyForGetClipboard          string `toml:"apiKeyForGetClipboard"`
-	ApiKeyForSetClipboard          string `toml:"apiKeyForsetClipboard"`
-	HttpsCertificateFilePath       string `toml:"httpsCertificateFilePath"`
-	HttpsCertificateSecretFilePath string `toml:"httpsCertificateSecretFilePath"`
-	Port                           int    `toml:"port"`
+	EncryptionKey string `toml:"encryptionKey"`
+	Port          int    `toml:"port"`
 }
 
 func loadConfig(path string) *Config {
@@ -82,24 +80,18 @@ func getLocalIpAddress() string {
 
 func main() {
 	config := loadConfig(resolveConfigPath())
+	encryptionKey := utils.DerivePbkdf2From([]byte(config.EncryptionKey))
 
 	clipboardService := services.NewClipboardService()
 	controller := controllers.Controller{
-		ApiKeyForGetClipboard: config.ApiKeyForGetClipboard,
-		ApiKeyForSetClipboard: config.ApiKeyForSetClipboard,
-		ClipboardService:      clipboardService,
+		EncryptionKey:    encryptionKey,
+		ClipboardService: clipboardService,
 	}
 
-	http.HandleFunc("GET /clipboard", controller.GetClipboardToSync)
-	http.HandleFunc("POST /clipboard", controller.SetClipboardToSync)
+	http.HandleFunc("POST /clipboard", controller.SetClipboard)
 
-	fmt.Printf("Your local address for client: https://%s:%d\n", getLocalIpAddress(), config.Port)
+	fmt.Printf("Your local address for client: http://%s:%d\n", getLocalIpAddress(), config.Port)
 	addr := fmt.Sprintf(":%d", config.Port)
-	fmt.Printf("Listening on https://%s\n", addr)
-	log.Fatal(http.ListenAndServeTLS(
-		addr,
-		config.HttpsCertificateFilePath,
-		config.HttpsCertificateSecretFilePath,
-		nil,
-	))
+	fmt.Printf("Listening on http://%s\n", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }

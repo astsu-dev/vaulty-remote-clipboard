@@ -3,51 +3,84 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"clipsync/internal/services"
+	"clipsync/internal/utils"
 )
 
 type Controller struct {
-	ApiKeyForGetClipboard string
-	ApiKeyForSetClipboard string
-	ClipboardService      *services.ClipboardService
+	EncryptionKey    []byte
+	ClipboardService *services.ClipboardService
 }
 
-func (c *Controller) GetClipboardToSync(w http.ResponseWriter, req *http.Request) {
-	if reqApiKeys, ok := req.Header["X-Api-Key"]; !ok || len(reqApiKeys) != 1 || reqApiKeys[0] != c.ApiKeyForGetClipboard {
-		sendResponse(w, http.StatusUnauthorized, map[string]any{"error": "Unauthorized"})
+type RequestBody struct {
+	Data string `json:"data"`
+}
+
+type SetClipboardBody struct {
+	Text      string `json:"text"`
+	ExpiresIn *int64 `json:"expiresIn"`
+}
+
+func (c *Controller) SetClipboard(w http.ResponseWriter, req *http.Request) {
+	decryptedData, skip := c.decryptBody(w, req)
+	if skip {
 		return
 	}
 
-	clipboard := c.ClipboardService.ClipboardToSync
-	// Clear clipboard after the consumption by client
-	c.ClipboardService.ClipboardToSync = ""
-
-	sendResponse(w, http.StatusOK, map[string]any{
-		"text": clipboard,
-	})
-}
-
-func (c *Controller) SetClipboardToSync(w http.ResponseWriter, req *http.Request) {
-	if reqApiKeys, ok := req.Header["X-Api-Key"]; !ok || len(reqApiKeys) != 1 || reqApiKeys[0] != c.ApiKeyForSetClipboard {
-		sendResponse(w, http.StatusUnauthorized, map[string]any{"error": "Unauthorized"})
+	var data *SetClipboardBody
+	if err := json.Unmarshal(decryptedData, &data); err != nil {
+		c.sendResponse(w, http.StatusBadRequest, map[string]any{"error": "Bad Request"})
 		return
 	}
 
-	c.ClipboardService.ClipboardToSync = c.ClipboardService.GetClipboard()
+	if data.ExpiresIn != nil && *data.ExpiresIn <= 0 {
+		c.sendResponse(w, http.StatusBadRequest, map[string]any{"error": "Expiration time must be greater than 0"})
+		return
+	}
 
-	sendResponse(w, http.StatusOK, map[string]any{})
+	c.ClipboardService.SetClipboard(data.Text)
+
+	if data.ExpiresIn != nil {
+		c.ClipboardService.ScheduleClearClipboard(time.Duration(*data.ExpiresIn))
+	}
+
+	c.sendResponse(w, http.StatusOK, map[string]any{})
 }
 
-func sendResponse(w http.ResponseWriter, status int, data map[string]any) {
+func (c *Controller) sendResponse(w http.ResponseWriter, status int, data map[string]any) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
-	serialized, err := json.Marshal(data)
+
+	serializedData, err := json.Marshal(data)
 	if err != nil {
 		panic(err)
 	}
-	_, err = w.Write(serialized)
+
+	encrypted := utils.EncryptGCM(c.EncryptionKey, serializedData)
+
+	serializedBody, err := json.Marshal(map[string]any{
+		"data": string(encrypted),
+	})
 	if err != nil {
 		panic(err)
 	}
+
+	_, err = w.Write(serializedBody)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Parses and decrypts request body.
+func (c *Controller) decryptBody(w http.ResponseWriter, req *http.Request) (result []byte, skip bool) {
+	var body *RequestBody
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		c.sendResponse(w, http.StatusBadRequest, map[string]any{"error": "Bad Request"})
+		return nil, true
+	}
+
+	decryptedData := utils.DecryptGCM(c.EncryptionKey, []byte(body.Data))
+	return decryptedData, false
 }
