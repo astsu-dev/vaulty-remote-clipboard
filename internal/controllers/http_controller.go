@@ -9,21 +9,12 @@ import (
 	"clipsync/internal/utils"
 )
 
-type Controller struct {
+type HTTPController struct {
 	EncryptionKey    []byte
 	ClipboardService *services.ClipboardService
 }
 
-type RequestBody struct {
-	Data string `json:"data"`
-}
-
-type SetClipboardBody struct {
-	Text      string `json:"text"`
-	ExpiresIn *int64 `json:"expiresIn"`
-}
-
-func (c *Controller) SetClipboard(w http.ResponseWriter, req *http.Request) {
+func (c *HTTPController) SetClipboard(w http.ResponseWriter, req *http.Request) {
 	decryptedData, skip := c.decryptBody(w, req)
 	if skip {
 		return
@@ -49,7 +40,7 @@ func (c *Controller) SetClipboard(w http.ResponseWriter, req *http.Request) {
 	c.sendResponse(w, http.StatusOK, map[string]any{})
 }
 
-func (c *Controller) sendResponse(w http.ResponseWriter, status int, data map[string]any) {
+func (c *HTTPController) sendResponse(w http.ResponseWriter, status int, data map[string]any) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 
@@ -74,7 +65,7 @@ func (c *Controller) sendResponse(w http.ResponseWriter, status int, data map[st
 }
 
 // Parses and decrypts request body.
-func (c *Controller) decryptBody(w http.ResponseWriter, req *http.Request) (result []byte, skip bool) {
+func (c *HTTPController) decryptBody(w http.ResponseWriter, req *http.Request) (result []byte, skip bool) {
 	var body *RequestBody
 	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
 		c.sendResponse(w, http.StatusBadRequest, map[string]any{"error": "Bad Request"})

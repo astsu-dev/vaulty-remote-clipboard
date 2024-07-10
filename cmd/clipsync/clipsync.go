@@ -16,9 +16,15 @@ import (
 	"clipsync/internal/utils"
 )
 
+const (
+	HTTPServerType = "http"
+	UDPServerType  = "udp"
+)
+
 type Config struct {
 	EncryptionKey string `toml:"encryptionKey"`
 	Port          int    `toml:"port"`
+	ServerType    string `toml:"serverType"`
 }
 
 func loadConfig(path string) *Config {
@@ -38,6 +44,12 @@ func loadConfig(path string) *Config {
 
 	if config.Port < 1 {
 		panic("You must specify correct port in the config")
+	}
+
+	switch config.ServerType {
+	case HTTPServerType, UDPServerType:
+	default:
+		panic("You must specify valid server type. The valid values are: http or udp")
 	}
 
 	return config
@@ -81,17 +93,44 @@ func getLocalIpAddress() string {
 func main() {
 	config := loadConfig(resolveConfigPath())
 	encryptionKey := utils.DerivePbkdf2From([]byte(config.EncryptionKey))
-
 	clipboardService := services.NewClipboardService()
-	controller := controllers.Controller{
-		EncryptionKey:    encryptionKey,
-		ClipboardService: clipboardService,
+
+	switch config.ServerType {
+	case HTTPServerType:
+		controller := controllers.HTTPController{
+			EncryptionKey:    encryptionKey,
+			ClipboardService: clipboardService,
+		}
+
+		http.HandleFunc("POST /clipboard", controller.SetClipboard)
+
+		fmt.Printf("Your local address for client: http://%s:%d\n", getLocalIpAddress(), config.Port)
+		addr := fmt.Sprintf(":%d", config.Port)
+		fmt.Printf("Listening on http://%s\n", addr)
+		log.Fatal(http.ListenAndServe(addr, nil))
+
+	case UDPServerType:
+		controller := controllers.UDPController{
+			EncryptionKey:    encryptionKey,
+			ClipboardService: clipboardService,
+		}
+
+		addr := fmt.Sprintf(":%d", config.Port)
+		packetConn, err := net.ListenPacket("udp", addr)
+		if err != nil {
+			panic(err)
+		}
+		defer packetConn.Close()
+		fmt.Printf("Listening on %s for UDP messages\n", addr)
+
+		for {
+			buf := make([]byte, 1024)
+			n, _, err := packetConn.ReadFrom(buf)
+			if err != nil {
+				panic(err)
+			}
+
+			controller.SetClipboard(buf[:n])
+		}
 	}
-
-	http.HandleFunc("POST /clipboard", controller.SetClipboard)
-
-	fmt.Printf("Your local address for client: http://%s:%d\n", getLocalIpAddress(), config.Port)
-	addr := fmt.Sprintf(":%d", config.Port)
-	fmt.Printf("Listening on http://%s\n", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
 }

@@ -6,9 +6,7 @@ import (
 	"golang.design/x/clipboard"
 )
 
-type ClipboardService struct {
-	cancelClipboardCleanupChan chan struct{}
-}
+type ClipboardService struct{}
 
 func (cs *ClipboardService) SetClipboard(content string) {
 	clipboard.Write(clipboard.FmtText, []byte(content))
@@ -16,13 +14,9 @@ func (cs *ClipboardService) SetClipboard(content string) {
 
 // Schedules clipboard cleanup after the specified timeout in seconds.
 func (cs *ClipboardService) ScheduleClearClipboard(timeout time.Duration) {
-	cs.cancelClipboardCleanupChan <- struct{}{}
 	go func() {
-		select {
-		case <-cs.cancelClipboardCleanupChan:
-		case <-time.After(timeout * time.Second):
-			cs.SetClipboard("")
-		}
+		time.Sleep(timeout * time.Second)
+		cs.SetClipboard("")
 	}()
 }
 

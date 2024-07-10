@@ -1,2 +1,3 @@
 encryptionKey = "VERY_SECRET_KEY_FOR_SERVER"
 port = 8090
+serverType = "udp"
