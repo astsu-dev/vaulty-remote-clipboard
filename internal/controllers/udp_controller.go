@@ -47,6 +47,9 @@ func (c *UDPController) decryptBody(message []byte) ([]byte, error) {
 		return nil, errors.New("Invalid UDP message")
 	}
 
-	decryptedData := utils.DecryptGCM(c.EncryptionKey, []byte(body.Data))
+	decryptedData, err := utils.DecryptGCM(c.EncryptionKey, []byte(body.Data))
+	if err != nil {
+		return nil, err
+	}
 	return decryptedData, nil
 }

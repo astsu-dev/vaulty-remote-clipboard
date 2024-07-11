@@ -72,6 +72,10 @@ func (c *HTTPController) decryptBody(w http.ResponseWriter, req *http.Request) (
 		return nil, true
 	}
 
-	decryptedData := utils.DecryptGCM(c.EncryptionKey, []byte(body.Data))
+	decryptedData, err := utils.DecryptGCM(c.EncryptionKey, []byte(body.Data))
+	if err != nil {
+		c.sendResponse(w, http.StatusBadRequest, map[string]any{"error": "Message authentication fails"})
+		return nil, true
+	}
 	return decryptedData, false
 }

@@ -25,8 +25,9 @@ func DerivePbkdf2From(password []byte) []byte {
 	)
 }
 
-// Decrypts ciphertext in base64 encoding with the key.
-func DecryptGCM(key []byte, ciphertext []byte) []byte {
+// DecryptGCM decrypts ciphertext in base64 encoding with the key.
+// If message authentication fails will return error.
+func DecryptGCM(key []byte, ciphertext []byte) ([]byte, error) {
 	decoded := make([]byte, base64.StdEncoding.DecodedLen(len(ciphertext)))
 	n, err := base64.StdEncoding.Decode(decoded, ciphertext)
 	if err != nil {
@@ -49,10 +50,10 @@ func DecryptGCM(key []byte, ciphertext []byte) []byte {
 
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		panic(err)
+    return nil, err
 	}
 
-	return plaintext
+	return plaintext, nil
 }
 
 // Encrypts text with the key. Returns result in the base64 encoding.
