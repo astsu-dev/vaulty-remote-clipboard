@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/pelletier/go-toml/v2"
+	"golang.org/x/term"
 
 	"clipsync/internal/controllers"
 	"clipsync/internal/services"
@@ -22,9 +23,8 @@ const (
 )
 
 type Config struct {
-	EncryptionKey string `toml:"encryptionKey"`
-	Port          int    `toml:"port"`
-	ServerType    string `toml:"serverType"`
+	Port       int    `toml:"port"`
+	ServerType string `toml:"serverType"`
 }
 
 func loadConfig(path string) *Config {
@@ -92,7 +92,15 @@ func getLocalIpAddress() string {
 
 func main() {
 	config := loadConfig(resolveConfigPath())
-	encryptionKey := utils.DerivePbkdf2From([]byte(config.EncryptionKey))
+
+	fmt.Printf("Password: ")
+	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println()
+
+	encryptionKey := utils.DerivePbkdf2From(password)
 	clipboardService := services.NewClipboardService()
 
 	switch config.ServerType {
