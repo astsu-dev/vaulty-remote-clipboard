@@ -29,10 +29,10 @@ func (s *HTTPServer) Start(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-    err := s.server.Shutdown(context.Background())
-    if err != nil {
-      return err
-    }
+		err := s.server.Shutdown(context.Background())
+		if err != nil {
+			return err
+		}
 		err = <-listenResultCh
 		if err != nil {
 			return err

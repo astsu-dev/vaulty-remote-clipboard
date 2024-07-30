@@ -1,6 +1,10 @@
-# Clipsync - sync your clipboard between PC and Mobile
+# Vaulty Remote Clipboard - copy your passwords from the Vaulty mobile app to your computer
 
-## Build
+## GUI
+
+### Build
+
+> You can skip this step if you use the pre-built binary from the [Releases](https://github.com/astsu-dev/vaulty-remote-clipboard/releases) page.
 
 Windows:
 
@@ -17,46 +21,68 @@ make build_linux
 MacOS:
 
 ```bash
-make build_macos
+make build_darwin
 ```
 
-After the build is complete, you can find the `clipsync` executable file in the `bin` directory.
+After the build is complete, you can find the executable file in the `./fyne-cross/bin/<os-name>` directory.
 
-## How to run
+### How to use the application
 
-### Generate SSL certificate and private key
+Run the built executable file. The application will prompt the password from you. Enter the same as in the mobile application.
+By default the server is running on the `8090` port. You can change this value in the port field. If you change the port, don't forget to click the "Save" button.
+To run the server, click the "Start" button. If all is well, you will see the log message indicates the server is running below the start button.
+If you want to stop the server, click the "Stop" button.
+
+## CLI
+
+### Build
+
+> You can skip this step if you use the pre-built binary from the [Releases](https://github.com/astsu-dev/vaulty-remote-clipboard/releases) page.
+
+Windows:
 
 ```bash
-make gen_cert
+make build_windows_cli
 ```
+
+Linux:
+
+```bash
+make build_linux_cli
+```
+
+MacOS:
+
+```bash
+make build_darwin_cli
+```
+
+After the build is complete, you can find the executable file in the `./bin` directory.
 
 ### Create config file
 
-Create config file by the following path `~/.config/clipsync/config.toml` if you use Linux or MacOS, or `./config.toml` if you use Windows.
+Create config file by the following path `~/.config/remclip/config.toml` if you use Linux or MacOS, or `./config.toml` if you use Windows.
 
 Paste the following content into the config file:
 
 ```yaml
-apiKeyForGetClipboard = "api_key_for_client"
-apiKeyForSetClipboard = "api_key_for_server"
-httpsCertificateFilePath = "cert.pem" # path to the generated certificate from the previous step
-httpsCertificateKeyFilePath = "key.pem" # path to the generated private key from the previous step
 port = 8090
+serverType = udp
 ```
 
 ### Run the server:
 
 ```bash
-./bin/clipsync
+./bin/remclip
 ```
 
-If all is well, you will see the IP address and port on which the server is running.
-You should enter this data in the mobile application.
+The application will prompt the password from you. Enter the same as in the mobile application.
+If all is well, you will see the log message indicates the server is running.
 
 ### Non-default config location
 
 You can also specify the path to the config file if it is not in the default location:
 
 ```bash
-./bin/clipsync /path/to/config.toml
+./bin/remclip /path/to/config.toml
 ```

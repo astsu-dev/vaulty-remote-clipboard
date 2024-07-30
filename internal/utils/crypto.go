@@ -50,7 +50,7 @@ func DecryptGCM(key []byte, ciphertext []byte) ([]byte, error) {
 
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-    return nil, err
+		return nil, err
 	}
 
 	return plaintext, nil
