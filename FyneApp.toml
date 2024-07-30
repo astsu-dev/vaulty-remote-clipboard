@@ -1,0 +1,6 @@
+[Details]
+  Icon = "assets/icon.png"
+  Name = "Vaulty Remote Clipboard"
+  ID = "dev.astsu.vaulty-remote-clipboard"
+  Version = "0.1.0"
+  Build = 3

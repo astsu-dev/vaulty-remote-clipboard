@@ -1,4 +1,4 @@
-package controllers
+package servers
 
 type RequestBody struct {
 	Data string `json:"data"`
