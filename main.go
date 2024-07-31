@@ -17,11 +17,12 @@ import (
 )
 
 const (
-	APP_ID                    = "dev.astsu.vaulty-remote-clipboard"
-	WINDOW_NAME               = "Vaulty Remote Clipboard"
-	WINDOW_WIDTH              = 300
-	WINDOW_HEIGHT             = 300
-	SERVER_STOPPED_LABEL_TEXT = "The server is stopped"
+	AppId                  = "dev.astsu.vaulty-remote-clipboard"
+	WindowName             = "Vaulty Remote Clipboard"
+	WindowWidth            = 300
+	WindowHeight           = 300
+	ServerStoppedLabelText = "The server is stopped"
+	DefaultPort            = 8090
 )
 
 type ServerState struct {
@@ -60,7 +61,7 @@ func startServer(
 		if err != nil {
 			a.SendNotification(fyne.NewNotification("Unexpected error", err.Error()))
 		}
-		serverStatusLabel.SetText(SERVER_STOPPED_LABEL_TEXT)
+		serverStatusLabel.SetText(ServerStoppedLabelText)
 	}()
 }
 
@@ -71,19 +72,21 @@ func getServerRunningText(port int) string {
 func main() {
 	serverState := &ServerState{}
 
-	a := app.NewWithID(APP_ID)
+	a := app.NewWithID(AppId)
 	pref := a.Preferences()
 
-	w := a.NewWindow(WINDOW_NAME)
-	w.Resize(fyne.NewSize(WINDOW_WIDTH, WINDOW_HEIGHT))
+	w := a.NewWindow(WindowName)
+	w.Resize(fyne.NewSize(WindowWidth, WindowHeight))
 
 	portEntry := widget.NewEntry()
-	savedPort := pref.IntWithFallback("port", 8090)
+	portEntry.SetPlaceHolder("Port")
+	savedPort := pref.IntWithFallback("port", DefaultPort)
 	pref.SetInt("port", savedPort)
 	portEntry.SetText(strconv.Itoa(savedPort))
 
 	passwordEntry := widget.NewPasswordEntry()
-	serverStatusLabel := widget.NewLabel("The server is stopped")
+	passwordEntry.SetPlaceHolder("Password")
+	serverStatusLabel := widget.NewLabel(ServerStoppedLabelText)
 	serverStatusLabelContainer := container.NewCenter(serverStatusLabel)
 	saveButton := widget.NewButton("Save", func() {
 		port, err := strconv.Atoi(portEntry.Text)
@@ -99,13 +102,13 @@ func main() {
 			serverState.stop()
 		}
 	})
-	buttonsContainer := container.NewGridWithColumns(2, startButton, stopButton)
+	buttonsContainer := container.NewGridWithColumns(2, stopButton, startButton)
 	content := container.NewVBox(portEntry, passwordEntry, saveButton, buttonsContainer, serverStatusLabelContainer)
 
 	// Setup system tray
 	if desk, ok := a.(desktop.App); ok {
 		m := fyne.NewMenu(
-			WINDOW_NAME,
+			WindowName,
 			fyne.NewMenuItem("Show", func() {
 				w.Show()
 			}),
