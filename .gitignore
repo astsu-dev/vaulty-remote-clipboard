@@ -2,3 +2,4 @@ bin/
 *.pem
 *.app
 fyne-cross/
+.DS_Store
