@@ -12,7 +12,9 @@ import (
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 
-	"remclip/internal/servers"
+	"remclip/internal/servers/udp"
+	"remclip/internal/services/clipboard"
+	"remclip/internal/services/clipboardapi"
 	"remclip/internal/utils"
 )
 
@@ -35,6 +37,7 @@ func startServer(
 	passwordEntry *widget.Entry,
 	serverStatusLabel *widget.Label,
 	serverState *ServerState,
+	clipboardService clipboard.ClipboardServiceInterface,
 ) {
 	if serverState.stop != nil {
 		return
@@ -50,7 +53,7 @@ func startServer(
 
 	port := pref.Int("port")
 
-	server := servers.NewUDPServer(port, encryptionKey)
+	server := udp.NewUDPServer(port, encryptionKey, clipboardService)
 	ctx, cancel := context.WithCancel(context.Background())
 	serverState.stop = cancel
 
@@ -70,6 +73,12 @@ func getServerRunningText(port int) string {
 }
 
 func main() {
+	clipboardAPI, err := clipboardapi.NewClipClipboardAPI()
+	if err != nil {
+		panic(err)
+	}
+	clipboardService := clipboard.NewClipboardService(clipboardAPI)
+
 	serverState := &ServerState{}
 
 	a := app.NewWithID(AppId)
@@ -95,7 +104,7 @@ func main() {
 		}
 	})
 	startButton := widget.NewButton("Start", func() {
-		startServer(a, pref, passwordEntry, serverStatusLabel, serverState)
+		startServer(a, pref, passwordEntry, serverStatusLabel, serverState, clipboardService)
 	})
 	stopButton := widget.NewButton("Stop", func() {
 		if serverState.stop != nil {

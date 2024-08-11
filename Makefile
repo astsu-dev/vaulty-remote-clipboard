@@ -6,6 +6,8 @@ lint: vet
 	golangci-lint run
 run:
 	go run main.go
+test:
+	go test -v ./...
 
 # GUI build
 build_darwin:

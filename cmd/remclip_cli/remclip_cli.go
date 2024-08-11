@@ -12,12 +12,14 @@ import (
 	"golang.org/x/term"
 
 	"remclip/internal/servers"
+	"remclip/internal/servers/udp"
+	"remclip/internal/services/clipboard"
+	"remclip/internal/services/clipboardapi"
 	"remclip/internal/utils"
 )
 
 const (
-	HTTPServerType = "http"
-	UDPServerType  = "udp"
+	UDPServerType = "udp"
 )
 
 type Config struct {
@@ -45,9 +47,9 @@ func loadConfig(path string) *Config {
 	}
 
 	switch config.ServerType {
-	case HTTPServerType, UDPServerType:
+	case UDPServerType:
 	default:
-		panic("You must specify valid server type. The valid values are: http or udp")
+		panic(fmt.Sprintf("You must specify valid server type. The valid values are: %s", UDPServerType))
 	}
 
 	return config
@@ -75,6 +77,12 @@ func resolveConfigPath() string {
 }
 
 func main() {
+	clipboardAPI, err := clipboardapi.NewClipClipboardAPI()
+	if err != nil {
+		panic(err)
+	}
+	clipboardService := clipboard.NewClipboardService(clipboardAPI)
+
 	config := loadConfig(resolveConfigPath())
 
 	fmt.Printf("Password: ")
@@ -88,10 +96,8 @@ func main() {
 
 	var server servers.Server
 	switch config.ServerType {
-	case HTTPServerType:
-		server = servers.NewHTTPServer(config.Port, encryptionKey)
 	case UDPServerType:
-		server = servers.NewUDPServer(config.Port, encryptionKey)
+		server = udp.NewUDPServer(config.Port, encryptionKey, clipboardService)
 	default:
 		log.Fatalf("Unexpected server type: %s", config.ServerType)
 	}

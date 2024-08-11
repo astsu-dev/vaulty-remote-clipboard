@@ -1,4 +1,4 @@
-package servers
+package udp
 
 import (
 	"context"
@@ -7,16 +7,18 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
-	"remclip/internal/services"
+	"remclip/internal/servers"
+	"remclip/internal/services/clipboard"
 	"remclip/internal/utils"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type UDPServer struct {
 	port             int
 	encryptionKey    []byte
-	clipboardService *services.ClipboardService
+	clipboardService clipboard.ClipboardServiceInterface
 }
 
 func (s *UDPServer) Start(ctx context.Context) error {
@@ -56,8 +58,13 @@ func (s *UDPServer) handleSetClipboardMessage(message []byte) {
 		return
 	}
 
-	var data *SetClipboardBody
+	var data *servers.SetClipboardBody
 	if err := json.Unmarshal(decryptedData, &data); err != nil {
+		log.Println(err)
+		return
+	}
+	validate := validator.New()
+	if err := validate.Struct(data); err != nil {
 		log.Println(err)
 		return
 	}
@@ -67,35 +74,41 @@ func (s *UDPServer) handleSetClipboardMessage(message []byte) {
 		return
 	}
 
-	s.clipboardService.SetClipboard(data.Text)
+	s.clipboardService.SetClipboard(*data.Text)
 
 	if data.ExpiresIn != nil {
-		s.clipboardService.ScheduleClearClipboard(time.Duration(*data.ExpiresIn))
+		s.clipboardService.ScheduleClearClipboard(context.TODO(), uint(*data.ExpiresIn))
 	}
 }
 
 // Parses and decrypts request body.
 func (s *UDPServer) decryptBody(message []byte) ([]byte, error) {
-	var body *RequestBody
+	var body *servers.RequestBody
 	if err := json.Unmarshal(message, &body); err != nil {
-		return nil, errors.New("Invalid UDP message")
+		return nil, err
 	}
 
-	decryptedData, err := utils.DecryptGCM(s.encryptionKey, []byte(body.Data))
+	validate := validator.New()
+	if err := validate.Struct(body); err != nil {
+		return nil, err
+	}
+
+	decryptedData, err := utils.DecryptGCM(s.encryptionKey, []byte(*body.Data))
 	if err != nil {
 		return nil, err
 	}
 	return decryptedData, nil
 }
 
-func NewUDPServer(port int, encryptionKey []byte) *UDPServer {
-	clipboardService := services.NewClipboardService()
-
+func NewUDPServer(
+	port int,
+	encryptionKey []byte,
+	clipboardService clipboard.ClipboardServiceInterface,
+) *UDPServer {
 	s := UDPServer{
 		port:             port,
 		encryptionKey:    encryptionKey,
 		clipboardService: clipboardService,
 	}
-
 	return &s
 }
