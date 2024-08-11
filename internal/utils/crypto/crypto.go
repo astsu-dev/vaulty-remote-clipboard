@@ -1,4 +1,4 @@
-package utils
+package crypto
 
 import (
 	"crypto/aes"
@@ -10,9 +10,11 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-const pbkdf2Salt = "super-secret-vaulty-salt"
-const pbkdf2Iterations = 600000
-const pbkdf2KeyLen = 32
+const (
+	pbkdf2Salt       = "super-secret-vaulty-salt"
+	pbkdf2Iterations = 600000
+	pbkdf2KeyLen     = 32
+)
 
 // Derives pbkdf2 key from the specified password
 func DerivePbkdf2From(password []byte) []byte {

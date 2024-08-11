@@ -1,3 +1,5 @@
+<img align="left" width="80" height="80" src="assets/icon.png" alt="App icon" />
+
 # Vaulty Remote Clipboard - copy your passwords from the Vaulty mobile app to your computer
 
 The main philosophy of the [Vaulty](https://github.com/astsu-dev/vaulty-mobile) mobile application is to store your passwords only on your smartphone from the security purposes.

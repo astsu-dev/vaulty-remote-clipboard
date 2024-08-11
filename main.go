@@ -15,7 +15,7 @@ import (
 	"remclip/internal/servers/udp"
 	"remclip/internal/services/clipboard"
 	"remclip/internal/services/clipboardapi"
-	"remclip/internal/utils"
+	"remclip/internal/utils/crypto"
 )
 
 const (
@@ -49,7 +49,7 @@ func startServer(
 		a.SendNotification(fyne.NewNotification("Invalid password", "Password can't be empty"))
 		return
 	}
-	encryptionKey := utils.DerivePbkdf2From([]byte(password))
+	encryptionKey := crypto.DerivePbkdf2From([]byte(password))
 
 	port := pref.Int("port")
 

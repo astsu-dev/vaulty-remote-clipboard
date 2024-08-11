@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"remclip/internal/utils"
+	"remclip/internal/utils/crypto"
 	"testing"
 	"time"
 )
@@ -52,7 +52,7 @@ func (s *fakeClipboardService) ScheduleClearClipboardHasBeenCalled() bool {
 func TestUDPServer(t *testing.T) {
 	port := 9123
 	connectionString := fmt.Sprintf(":%d", port)
-	encryptionKey := utils.DerivePbkdf2From([]byte("testpassword"))
+	encryptionKey := crypto.DerivePbkdf2From([]byte("testpassword"))
 
 	t.Run("should set clipboard and schedule clear after the request", func(t *testing.T) {
 		// given
@@ -193,7 +193,7 @@ func sendRequest(
 	if err != nil {
 		t.Fatalf("cannot marshal the set clipboard body: %v", err)
 	}
-	encryptedSetClipboardBody := utils.EncryptGCM(encryptionKey, encodedData)
+	encryptedSetClipboardBody := crypto.EncryptGCM(encryptionKey, encodedData)
 	requestBody := map[string]string{
 		"data": string(encryptedSetClipboardBody),
 	}

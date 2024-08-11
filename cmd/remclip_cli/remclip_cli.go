@@ -15,7 +15,7 @@ import (
 	"remclip/internal/servers/udp"
 	"remclip/internal/services/clipboard"
 	"remclip/internal/services/clipboardapi"
-	"remclip/internal/utils"
+	"remclip/internal/utils/crypto"
 )
 
 const (
@@ -92,7 +92,7 @@ func main() {
 	}
 	fmt.Println()
 
-	encryptionKey := utils.DerivePbkdf2From(password)
+	encryptionKey := crypto.DerivePbkdf2From(password)
 
 	var server servers.Server
 	switch config.ServerType {

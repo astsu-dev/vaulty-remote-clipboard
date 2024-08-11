@@ -10,7 +10,7 @@ import (
 
 	"remclip/internal/servers"
 	"remclip/internal/services/clipboard"
-	"remclip/internal/utils"
+	"remclip/internal/utils/crypto"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -47,11 +47,11 @@ func (s *UDPServer) Start(ctx context.Context) error {
 			return err
 		}
 
-		s.handleSetClipboardMessage(buf[:n])
+		s.handleSetClipboardMessage(ctx, buf[:n])
 	}
 }
 
-func (s *UDPServer) handleSetClipboardMessage(message []byte) {
+func (s *UDPServer) handleSetClipboardMessage(ctx context.Context, message []byte) {
 	decryptedData, err := s.decryptBody(message)
 	if err != nil {
 		log.Println(err)
@@ -77,7 +77,7 @@ func (s *UDPServer) handleSetClipboardMessage(message []byte) {
 	s.clipboardService.SetClipboard(*data.Text)
 
 	if data.ExpiresIn != nil {
-		s.clipboardService.ScheduleClearClipboard(context.TODO(), uint(*data.ExpiresIn))
+		s.clipboardService.ScheduleClearClipboard(ctx, uint(*data.ExpiresIn))
 	}
 }
 
@@ -93,7 +93,7 @@ func (s *UDPServer) decryptBody(message []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	decryptedData, err := utils.DecryptGCM(s.encryptionKey, []byte(*body.Data))
+	decryptedData, err := crypto.DecryptGCM(s.encryptionKey, []byte(*body.Data))
 	if err != nil {
 		return nil, err
 	}
