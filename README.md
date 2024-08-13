@@ -59,4 +59,4 @@ After the server receives the datagram, it decrypts it and set the decrypted dat
 
 ## Build
 
-To build the application yourself go to the [BUILD.md](https://github.com/astsu-dev/vaulty-remote-clipboard/blob/main/BUILD.md) page.
+To build the application yourself go to the [BUILD](https://github.com/astsu-dev/vaulty-remote-clipboard/blob/main/BUILD.md) page.

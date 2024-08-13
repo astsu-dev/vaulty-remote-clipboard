@@ -29,4 +29,4 @@ MacOS:
 make build_darwin
 ```
 
-After the build is complete, you can find the executable file in the `./fyne-cross/bin/<os-name>` directory.
+After the build is complete, you can find the executable file in the `./dist` directory.

@@ -64,4 +64,4 @@
 
 ## Збірка
 
-Щоб зібрати додаток самостійно, перейдіть на сторінку [BUILD.md](https://github.com/astsu-dev/vaulty-remote-clipboard/blob/main/BUILD.md).
+Щоб зібрати додаток самостійно, перейдіть на сторінку [BUILD](https://github.com/astsu-dev/vaulty-remote-clipboard/blob/main/BUILD.md).
