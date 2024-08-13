@@ -2,6 +2,7 @@ package clipboard
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -10,17 +11,13 @@ type ClipboardAPI interface {
 	Write(content string)
 }
 
-// The interface for mocking the clipboard service in tests
-type ClipboardServiceInterface interface {
-	SetClipboard(content string)
-	ScheduleClearClipboard(ctx context.Context, timeout uint)
-}
-
 // ClipboardService has methods for writing the text content to the system clipboard
 // and scheduling the clipboard clearing after the specified timeout
 type ClipboardService struct {
 	clipboardAPI ClipboardAPI
 
+	// The mutex for the callback for cancelling previously scheduler clear clipboard goroutine
+	m sync.Mutex
 	// The function to cancel the previous scheduled clear clipboard goroutine
 	// before a new one will be scheduled
 	cancelScheduledClearClipboard *context.CancelFunc
@@ -36,18 +33,22 @@ func (cs *ClipboardService) ScheduleClearClipboard(
 	ctx context.Context,
 	timeout uint,
 ) {
+	cs.m.Lock()
 	if cs.cancelScheduledClearClipboard != nil {
 		(*cs.cancelScheduledClearClipboard)()
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
 	cs.cancelScheduledClearClipboard = &cancel
+	cs.m.Unlock()
 
 	go func() {
 		select {
 		case <-time.After(time.Duration(timeout) * time.Second):
 			cs.SetClipboard("")
+			cs.m.Lock()
 			cs.cancelScheduledClearClipboard = nil
+			cs.m.Unlock()
 		case <-ctx.Done():
 			return
 		}

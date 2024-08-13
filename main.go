@@ -37,7 +37,7 @@ func startServer(
 	passwordEntry *widget.Entry,
 	serverStatusLabel *widget.Label,
 	serverState *ServerState,
-	clipboardService clipboard.ClipboardServiceInterface,
+	clipboardService udp.ClipboardServiceInterface,
 ) {
 	if serverState.stop != nil {
 		return

@@ -9,16 +9,21 @@ import (
 	"net"
 
 	"remclip/internal/servers"
-	"remclip/internal/services/clipboard"
 	"remclip/internal/utils/crypto"
 
 	"github.com/go-playground/validator/v10"
 )
 
+// The interface for mocking the clipboard service in tests
+type ClipboardServiceInterface interface {
+	SetClipboard(content string)
+	ScheduleClearClipboard(ctx context.Context, timeout uint)
+}
+
 type UDPServer struct {
 	port             int
 	encryptionKey    []byte
-	clipboardService clipboard.ClipboardServiceInterface
+	clipboardService ClipboardServiceInterface
 }
 
 func (s *UDPServer) Start(ctx context.Context) error {
@@ -103,7 +108,7 @@ func (s *UDPServer) decryptBody(message []byte) ([]byte, error) {
 func NewUDPServer(
 	port int,
 	encryptionKey []byte,
-	clipboardService clipboard.ClipboardServiceInterface,
+	clipboardService ClipboardServiceInterface,
 ) *UDPServer {
 	s := UDPServer{
 		port:             port,
