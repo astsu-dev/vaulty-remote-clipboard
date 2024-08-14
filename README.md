@@ -38,7 +38,7 @@ For this, press the "Copy to remote" button (computer icon) near the password yo
 You'll see the message in the mobile app that the password was copied to the computer.
 Try to paste the password somewhere on your computer to check if it was copied successfully.
 If the password was not copied, probably you entered not the same password on both devices.
-10. You can close the desktop applicaiton and it will be minimized to the system tray.
+10. You can close the desktop application and it will be minimized to the system tray.
 
 > **Note:** The passwords will not be copied if your devices are not connected to the same local network.
 

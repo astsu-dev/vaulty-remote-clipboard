@@ -13,7 +13,7 @@
 
 <p align="left">
     <img height="500" src="assets/vaulty-remote-clipboard-interface.jpeg" alt="App screenshot" />
-    <img height="500" src="assets/vaulty-remote-clipboard-settings.png" alt="Vaulty app screenshot" />
+    <img height="500" src="assets/vaulty-remote-clipboard-settings-ua.png" alt="Vaulty app screenshot" />
 </p>
 
 ## Встановлення
